@@ -1,0 +1,48 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "lobby": {
+      "$gamecode": {
+        // Allow removing a game or writing the game code to the lobby if there is a corresponding game ID
+       ".validate": "newData.val()==null || root.child('games/'+newData.val()).exists()"
+      }
+    },
+    "games": {  
+      "$gameid": {
+        "created": {
+          // 'created' is a timestamp string
+          ".validate": "newData.isString()"
+        },
+        "state": {
+          // The state must be one of the recognized string values
+          ".validate": "newData.val().matches(/(lobby)|(cancelled)|(brief)|(play)|(debrief)|(done)/)"
+        },
+        "abort": {
+          ".validate": "newData.isBoolean()"
+        },
+        "players": {
+          "$playerindex": {
+            "uid": {
+              // We are going to let anything be written here but verify later that
+              // the person writing here has permission
+              ".validate": "true"
+            },
+            "country": {
+              // Must be one of the recognized string values
+              ".validate": "newData.val().matches(/(us)|(eu)|(ch)|(ru)|(ca)/)"
+            },
+            "$round": {
+              "selection": {
+                ".validate": "data.parent().parent().child('uid').val()===auth.uid && newData.val().toLowerCase().matches(/(memory)|(slide)|(rotation)|(sequence)/)"
+              },
+              "score": {
+                ".validate": "data.parent().parent().child('uid').val()===auth.uid && newData.isNumber()"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
